@@ -14,6 +14,7 @@ log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.IN
 #global variables
 USE_INTENTS_FROM_FILE = True
 INTENTS_FILE_PATH = "assets/intents.json"
+TESTINPUTS_FILE_PATH = "assets/test_inputs.json"
 PICKLE_FILE_PATH = "assets/chatbot.pickle"
 JSON_FILE_PATH = "assets/chatbotmodel.json"
 HDF5_FILE_PATH = "assets/chatbotmodel.h5"
@@ -35,6 +36,19 @@ def load_data():
         log.exception('Failed to load intent.')
         exit()
 
+    log.info('Loading data for tests.')
+
+    try:
+        if USE_INTENTS_FROM_FILE:
+            log.info(f'Loading intents from file: {TESTINPUTS_FILE_PATH}' )
+            with open(TESTINPUTS_FILE_PATH, 'r') as file:
+                test_inputs = json.load(file)["inputs"]
+        else:
+            pass
+    except:
+        log.exception('Failed to load test inputs.')
+        exit()
+
     log.info('Loading generated model.')
     try:
         with open(JSON_FILE_PATH, 'r') as file:
@@ -54,7 +68,7 @@ def load_data():
         log.exception('Failed to load pickle.')
         exit()
 
-    return data, chatbot_model, words, labels, training, output
+    return data, test_inputs, chatbot_model, words, labels, training, output
 
 def bag_of_words(input, words):
     bag = [0 for _ in range(len(words))]
@@ -94,11 +108,8 @@ def predict(chatbot_model, txt_input, data, words, labels):
 
 def test():
     log.info('Testing generated model')
-    data, chatbot_model, words, labels, training, output = load_data()
-    test_inputs = [
-        'hi', 'hello', 'bye bye', 'bye', 'what is your name', 'what can i call you', 
-        'what do you have to eat?', 'can i see the menu?', 'are you open?', 'what time do you open',
-        'how old are you?', 'what is your age?', 'how are you doing?']
+    data, test_inputs, chatbot_model, words, labels, training, output = load_data()
+    
     random.shuffle(test_inputs)
 
     log.info(f'Starting tests using the following dictionary of words: {test_inputs}')
