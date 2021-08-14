@@ -40,7 +40,7 @@ def generate():
     log.info('Training the model.')
     chat_model.fit(training, output, epochs=1000, batch_size=8)
 
-    log.info(f'Serializing model to yaml and exporting to {JSON_FILE_PATH}')
+    log.info(f'Serializing model to json and exporting to {JSON_FILE_PATH}')
     model_json = chat_model.to_json()
     with open(JSON_FILE_PATH, "w") as file:
         file.write(model_json)

@@ -130,7 +130,7 @@ def test():
         label = i["tag"]
         txt_input_list = i["inputs"]
 
-        log.info(f'Starting tests using the following dictionary of words for label "{label}": {txt_input}')
+        log.info(f'Starting tests using the following dictionary of words for label "{label}": {txt_input_list}')
 
         for txt_input in txt_input_list:
             word_count += 1
@@ -143,6 +143,8 @@ def test():
                 if label == tag:
                     log.info(f'[!] Predicted tag for "{txt_input}" matches expected result: {label}')
                     success_count += 1
+                else:
+                    log.info(f'[!] Predicted tag "{tag}" for "{txt_input}" DOES NOT MATCH expected result: {label}')
 
             log.info("-"*20)
 
