@@ -9,11 +9,12 @@ import pickle
 import nltk
 import numpy as np
 from nltk.stem import LancasterStemmer
+from core.connection.mongodb import MongoDB
 
 log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log"), log.StreamHandler()])
 
 #global variables
-USE_INTENTS_FROM_FILE = True
+USE_INTENTS_FROM_FILE = False
 INTENTS_FILE_PATH = "assets/intents.json"
 PICKLE_FILE_PATH = "assets/chatbot.pickle"
 
@@ -30,8 +31,13 @@ def generate():
         with open(INTENTS_FILE_PATH) as file:
             data = json.load(file)
     else:
-        #TODO import intents from database
-        pass
+        log.info('Loading intents from MONGO DB')
+        try:
+            db = MongoDB()
+            data = {'intents': list(db.query('lisa', 'chatbot-intents', {}))}
+        except:
+            log.exception('Failed to load intents from MONGO DB')
+            exit()
 
     log.info('Loading data from intents.')
     #loading data from intent

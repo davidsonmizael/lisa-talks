@@ -8,11 +8,12 @@ import json
 import random
 from nltk.stem import LancasterStemmer
 from tensorflow.python.keras.models import model_from_json
+from core.connection.mongodb import MongoDB
 
 log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log"), log.StreamHandler()])
 
 #global variables
-USE_INTENTS_FROM_FILE = True
+USE_INTENTS_FROM_FILE = False
 INTENTS_FILE_PATH = "assets/intents.json"
 TESTINPUTS_FILE_PATH = "assets/test_inputs.json"
 PICKLE_FILE_PATH = "assets/chatbot.pickle"
@@ -31,7 +32,13 @@ def load_data():
             with open(INTENTS_FILE_PATH, 'r') as file:
                 data = json.load(file)
         else:
-            pass
+            log.info('Loading intents from MONGO DB')
+            try:
+                db = MongoDB()
+                data = {'intents': list(db.query('lisa', 'chatbot-intents', {}))}
+            except:
+                log.exception('Failed to load intents from MONGO DB')
+                exit()
     except:
         log.exception('Failed to load intent.')
         exit()
@@ -44,7 +51,14 @@ def load_data():
             with open(TESTINPUTS_FILE_PATH, 'r') as file:
                 test_inputs = json.load(file)["inputs"]
         else:
-            pass
+            log.info('Loading test inputs from MONGO DB')
+            try:
+                db = MongoDB()
+                test_inputs = list(db.query('lisa', 'chatbot-testdata', {}))
+                print(test_inputs)
+            except:
+                log.exception('Failed to load test inputs from MONGO DB')
+                exit()
     except:
         log.exception('Failed to load test inputs.')
         exit()
@@ -88,7 +102,7 @@ def predict(chatbot_model, txt_input, data, words, labels):
         ct_array = np.array(ct_array)
         
         if np.all((ct_array == 0)):
-            return None
+            return None, None
             
         result = chatbot_model.predict(ct_array[0:1])
         result_index = np.argmax(result)
@@ -100,31 +114,39 @@ def predict(chatbot_model, txt_input, data, words, labels):
                 if tg['tag'] == tag:
                     responses = tg['responses']
             
-            return random.choice(responses)
+            return tag, random.choice(responses)
         else:
-            return None
+            return None, None
     except:
         log.exception('Failed to predict value')
 
 def test():
     log.info('Testing generated model')
-    data, test_inputs, chatbot_model, words, labels, training, output = load_data()
+    data, tagged_inputs, chatbot_model, words, labels, training, output = load_data()
     
-    random.shuffle(test_inputs)
-
-    log.info(f'Starting tests using the following dictionary of words: {test_inputs}')
     success_count = 0
-    for i in test_inputs:
-        log.info(f'Testing with word: "{i}"')
-        result = predict(chatbot_model, i, data, words, labels)
-        if result is None:
-            log.info(f'Failed to find a match for: "{i}"')
-        else:
-            success_count += 1
-            log.info(f'[!] Predicted response for "{i}": "{result}"')
-        log.info("-"*20)
+    word_count = 0
+    for i in tagged_inputs:
+        label = i["tag"]
+        txt_input_list = i["inputs"]
 
-    log.info(f'This model predicted responses for {success_count} out of {len(test_inputs)} inputs.')
+        log.info(f'Starting tests using the following dictionary of words for label "{label}": {txt_input}')
+
+        for txt_input in txt_input_list:
+            word_count += 1
+            log.info(f'Testing with word: "{txt_input}"')
+            tag, result = predict(chatbot_model, txt_input, data, words, labels)
+            if result is None:
+                log.info(f'Failed to find a match for: "{txt_input}"')
+            else:
+                log.info(f'[!] Predicted response for "{txt_input}": "{result}"')
+                if label == tag:
+                    log.info(f'[!] Predicted tag for "{txt_input}" matches expected result: {label}')
+                    success_count += 1
+
+            log.info("-"*20)
+
+    log.info(f'This model predicted responses for {success_count} out of {word_count} inputs.')
 
 if __name__ == '__main__':
     test()

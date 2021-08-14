@@ -1,5 +1,23 @@
-{
-    "inputs": ["hi", "hello", "bye bye", "bye", "what is your name", "what can i call you", 
-    "what do you have to eat?", "can i see the menu?", "are you open?", "what time do you open",
-    "how old are you?", "what is your age?", "how are you doing?"]
-}
+{"inputs": [
+    {"tag": "greeting",
+     "inputs": ["hi", "hello"]
+    },
+    {"tag": "greetingMore",
+        "inputs": ["how are you doing?"]
+    },
+    {"tag": "goodbye",
+        "inputs": ["bye bye", "bye", "see you later"]
+    },
+    {"tag": "age",
+        "inputs": ["how old are you?", "what is your age?"]
+    },
+    {"tag": "name",
+        "inputs": ["what is your name", "what can i call you"]
+    },
+    {"tag": "shop",
+        "inputs": ["what do you have to eat?", "can i see the menu?"]
+    },
+    {"tag": "hours",
+        "inputs": ["are you open?", "what time do you open"]
+    }
+]}
