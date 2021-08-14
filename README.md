@@ -31,6 +31,12 @@ Use `setup.py` to install the dependencies and generate the model to run locally
 python setup.py develop
 ```
 
+Run the Flask server using `run.py`.
+
+```sh
+python run.py
+```
+
 ## Libraries
 
 LISA Talks is currently using the following libraries.
