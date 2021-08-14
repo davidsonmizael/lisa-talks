@@ -20,49 +20,41 @@ HDF5_FILE_PATH = "assets/chatbotmodel.h5"
 
 stemmer = LancasterStemmer()
 
-log.info('Loading data from intent.')
+def load_data():
+    
+    log.info('Loading data from intent.')
 
-try:
-    if USE_INTENTS_FROM_FILE:
-        log.info(f'Loading intents from file: {INTENTS_FILE_PATH}' )
-        with open(INTENTS_FILE_PATH, 'r') as file:
-            data = json.load(file)
-    else:
-        pass
-except:
-    log.exception('Failed to load intent.')
-    exit()
+    try:
+        if USE_INTENTS_FROM_FILE:
+            log.info(f'Loading intents from file: {INTENTS_FILE_PATH}' )
+            with open(INTENTS_FILE_PATH, 'r') as file:
+                data = json.load(file)
+        else:
+            pass
+    except:
+        log.exception('Failed to load intent.')
+        exit()
 
-log.info('Loading generated model.')
-try:
-    with open(JSON_FILE_PATH, 'r') as file:
-        chatbot_model = model_from_json(file.read())
-    chatbot_model.load_weights(HDF5_FILE_PATH)
-    log.info('Loaded model from file.')
-except:
-    log.exception('Failed to load model.')
-    exit()
+    log.info('Loading generated model.')
+    try:
+        with open(JSON_FILE_PATH, 'r') as file:
+            chatbot_model = model_from_json(file.read())
+        chatbot_model.load_weights(HDF5_FILE_PATH)
+        log.info('Loaded model from file.')
+    except:
+        log.exception('Failed to load model.')
+        exit()
 
-log.info('Loading data from pickle.')
-try:
-    with open(PICKLE_FILE_PATH, 'rb') as file:
-        words, labels, training, output = pickle.load(file)
-    log.info('Loaded data from pickle.')
-except:
-    log.exception('Failed to load pickle.')
-    exit()
+    log.info('Loading data from pickle.')
+    try:
+        with open(PICKLE_FILE_PATH, 'rb') as file:
+            words, labels, training, output = pickle.load(file)
+        log.info('Loaded data from pickle.')
+    except:
+        log.exception('Failed to load pickle.')
+        exit()
 
-
-if USE_INTENTS_FROM_FILE:
-    log.info(f'Loading intents from file: {INTENTS_FILE_PATH}' )
-    with open(INTENTS_FILE_PATH) as file:
-        data = json.load(file)
-else:
-    #TODO import intents from database
-    pass
-
-log.info('Testing generated model')
-
+    return data, chatbot_model, words, labels, training, output
 
 def bag_of_words(input, words):
     bag = [0 for _ in range(len(words))]
@@ -75,7 +67,7 @@ def bag_of_words(input, words):
     
     return np.array(bag)
 
-def predict(txt_input):
+def predict(chatbot_model, txt_input, data, words, labels):
     try:
         ct = bag_of_words(txt_input, words)
         ct_array = [ct]
@@ -101,6 +93,8 @@ def predict(txt_input):
         log.exception('Failed to predict value')
 
 def test():
+    log.info('Testing generated model')
+    data, chatbot_model, words, labels, training, output = load_data()
     test_inputs = [
         'hi', 'hello', 'bye bye', 'bye', 'what is your name', 'what can i call you', 
         'what do you have to eat?', 'can i see the menu?', 'are you open?', 'what time do you open',
@@ -108,14 +102,18 @@ def test():
     random.shuffle(test_inputs)
 
     log.info(f'Starting tests using the following dictionary of words: {test_inputs}')
+    success_count = 0
     for i in test_inputs:
         log.info(f'Testing with word: "{i}"')
-        result = predict(i)
+        result = predict(chatbot_model, i, data, words, labels)
         if result is None:
             log.info(f'Failed to find a match for: "{i}"')
         else:
+            success_count += 1
             log.info(f'[!] Predicted response for "{i}": "{result}"')
         log.info("-"*20)
+
+    log.info(f'This model predicted responses for {success_count} out of {len(test_inputs)} inputs.')
 
 if __name__ == '__main__':
     test()

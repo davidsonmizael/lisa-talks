@@ -137,3 +137,8 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Generated models
+assets/*.pickle
+assets/*model.json
+assets/*model.h5

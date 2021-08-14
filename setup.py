@@ -6,17 +6,16 @@ except ImportError:
 
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-from dotenv import load_dotenv
 from scripts import generate_pickle
 from scripts import generate_models
 from scripts import test_model
-
-#loading .env properties
-load_dotenv(".env")
+from scripts import test_mongodb_connection
 
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
+        develop.run(self)
+        test_mongodb_connection.test()
         generate_pickle.generate()
         generate_models.generate()
         test_model.test()
@@ -25,10 +24,10 @@ class PostInstallCommand(install):
     """Post-installation for installation mode."""
     def run(self):
         install.run(self)
+        test_mongodb_connection.test()
         generate_pickle.generate()
         generate_models.generate()
         test_model.test()
-
 
 def get_description():
     with open("README.md", "r") as f:
