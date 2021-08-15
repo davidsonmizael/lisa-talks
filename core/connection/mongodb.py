@@ -49,3 +49,14 @@ class MongoDB:
             return col.find(query).count()
         except:
             log.exception(f'DB: {database} - {collection}: Failed to run query: {query} ')
+
+    def insert(self, database, collection, data):
+        if self.client is None:
+            self.connect()
+        
+        try:
+            db = self.client[database]
+            col = db[collection]
+            return col.insert_one(data)
+        except:
+            log.exception(f'DB: {database} - {collection}: Failed to insert data: {data} ')
