@@ -6,7 +6,9 @@ import nltk
 import pickle
 import json
 import random
+from nltk.corpus import stopwords
 from nltk.stem import LancasterStemmer
+from nltk.stem import RSLPStemmer
 from dotenv import load_dotenv
 from tensorflow.python.keras.models import model_from_json
 from core.connection.mongodb import MongoDB
@@ -15,13 +17,17 @@ import json
 log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log"), log.StreamHandler()])
 load_dotenv()
 
+LANGUAGE = os.getenv("LANGUAGE")
+
 #global variables
 USE_INTENTS_FROM_FILE = False
-INTENTS_FILE_PATH = "assets/intents.json"
+if LANGUAGE == "portuguese":
+    INTENTS_FILE_PATH = "assets/intents-portuguese.json"
+else:
+    INTENTS_FILE_PATH = "assets/intents.json"
 PICKLE_FILE_PATH = "assets/chatbot.pickle"
 JSON_FILE_PATH = "assets/chatbotmodel.json"
 HDF5_FILE_PATH = "assets/chatbotmodel.h5"
-
 
 class Brain:
 
@@ -30,7 +36,11 @@ class Brain:
         self.data = None
         self.words = []
         self.labels = []
-        self.stemmer = LancasterStemmer()
+        self.stop_words = stopwords.words(LANGUAGE)
+        if LANGUAGE == "portuguese":
+            self.stemmer = RSLPStemmer()
+        else:
+            self.stemmer = LancasterStemmer()
 
     def load_intents(self):
         try:
@@ -77,6 +87,7 @@ class Brain:
     def bag_of_words(self, input):
         bag = [0 for _ in range(len(self.words))]
         s_words = nltk.word_tokenize(input)
+        s_words = [w for w in s_words if not w.lower() in self.stop_words]
         s_words = [self.stemmer.stem(w.lower()) for w in s_words]
         for sw in s_words:
             for i, w in enumerate(self.words):

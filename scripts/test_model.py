@@ -1,26 +1,43 @@
 #!/usr/bin/env python
 import os
 import logging as log
+from scripts.generate_pickle import LANGUAGE
 import numpy as np
 import nltk
 import pickle
 import json
 import random
+from nltk.corpus import stopwords
 from nltk.stem import LancasterStemmer
+from nltk.stem import RSLPStemmer
 from tensorflow.python.keras.models import model_from_json
 from core.connection.mongodb import MongoDB
+from dotenv import load_dotenv
 
 log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log"), log.StreamHandler()])
 
+load_dotenv()
+
 #global variables
+LANGUAGE = os.getenv("LANGUAGE")
+
 USE_INTENTS_FROM_FILE = False
-INTENTS_FILE_PATH = "assets/intents.json"
-TESTINPUTS_FILE_PATH = "assets/test_inputs.json"
+if LANGUAGE == "portuguese":
+    INTENTS_FILE_PATH = "assets/intents-portuguese.json"
+    TESTINPUTS_FILE_PATH = "assets/test_inputs-portuguese.json"
+else:
+    INTENTS_FILE_PATH = "assets/intents.json"
+    TESTINPUTS_FILE_PATH = "assets/test_inputs.json"
 PICKLE_FILE_PATH = "assets/chatbot.pickle"
 JSON_FILE_PATH = "assets/chatbotmodel.json"
 HDF5_FILE_PATH = "assets/chatbotmodel.h5"
 
-stemmer = LancasterStemmer()
+if LANGUAGE == "portuguese":
+    stemmer = RSLPStemmer()
+else:
+    stemmer = LancasterStemmer()
+
+stop_words = stopwords.words(LANGUAGE)
 
 def load_data():
     
@@ -87,6 +104,7 @@ def load_data():
 def bag_of_words(input, words):
     bag = [0 for _ in range(len(words))]
     s_words = nltk.word_tokenize(input)
+    s_words = [w for w in s_words if not w.lower() in stop_words]
     s_words = [stemmer.stem(w.lower()) for w in s_words]
     for sw in s_words:
         for i, w in enumerate(words):
@@ -137,14 +155,14 @@ def test():
             log.info(f'Testing with word: "{txt_input}"')
             tag, result = predict(chatbot_model, txt_input, data, words, labels)
             if result is None:
-                log.info(f'Failed to find a match for: "{txt_input}"')
+                log.info(f'[x]Failed to find a match for: "{txt_input}"')
             else:
-                log.info(f'[!] Predicted response for "{txt_input}": "{result}"')
+                log.info(f'[!!!] Predicted response for "{txt_input}": "{result}"')
                 if label == tag:
-                    log.info(f'[!] Predicted tag for "{txt_input}" matches expected result: {label}')
+                    log.info(f'[!!!] Predicted tag for "{txt_input}" matches expected result: {label}')
                     success_count += 1
                 else:
-                    log.info(f'[!] Predicted tag "{tag}" for "{txt_input}" DOES NOT MATCH expected result: {label}')
+                    log.info(f'[x] Predicted tag "{tag}" for "{txt_input}" DOES NOT MATCH expected result: {label}')
 
             log.info("-"*20)
 

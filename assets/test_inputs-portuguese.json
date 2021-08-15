@@ -1,0 +1,54 @@
+{
+    "inputs": [
+        {
+            "tag": "saudacao",
+            "inputs": [
+                "oi",
+                "olá"
+            ]
+        },
+        {
+            "tag": "saudacaoExtra",
+            "inputs": [
+                "como você está?"
+            ]
+        },
+        {
+            "tag": "despedida",
+            "inputs": [
+                "tchau",
+                "adeus",
+                "até mais tarde"
+            ]
+        },
+        {
+            "tag": "idade",
+            "inputs": [
+                "quantos anos você tem?",
+                "qual sua idade?"
+            ]
+        },
+        {
+            "tag": "desabafo",
+            "inputs": [
+                "queria me abrir",
+                "preciso falar uma coisa"
+            ]
+        },
+        {
+            "tag": "nome",
+            "inputs": [
+                "como devo te chamar?",
+                "como você se chama?",
+                "qual o seu nome?"
+            ]
+        },
+        {
+            "tag": "ajuda",
+            "inputs": [
+                "estou me sentindo suicida",
+                "preciso falar com alguem"
+            ]
+        }
+    ]
+}
