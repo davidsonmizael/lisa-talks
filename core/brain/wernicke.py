@@ -11,8 +11,9 @@ from nltk.stem import LancasterStemmer
 from nltk.stem import RSLPStemmer
 from dotenv import load_dotenv
 from tensorflow.python.keras.models import model_from_json
-from core.connection.mongodb import MongoDB
 import json
+from datetime import datetime
+from core.brain.temporal_lobe import TemporalLobe
 
 log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log"), log.StreamHandler()])
 load_dotenv()
@@ -29,7 +30,11 @@ PICKLE_FILE_PATH = "assets/chatbot.pickle"
 JSON_FILE_PATH = "assets/chatbotmodel.json"
 HDF5_FILE_PATH = "assets/chatbotmodel.h5"
 
-class Brain:
+"""
+Wernicke's Area is the part of the brain responsible for language comprehension
+"""
+
+class Wernicke:
 
     def __init__(self):
         self.chatbot_model = None
@@ -37,6 +42,7 @@ class Brain:
         self.words = []
         self.labels = []
         self.stop_words = stopwords.words(LANGUAGE)
+        self.temporal_lobe = TemporalLobe()
         if LANGUAGE == "portuguese":
             self.stemmer = RSLPStemmer()
         else:
@@ -51,8 +57,7 @@ class Brain:
             else:
                 log.info('Loading intents from MONGO DB')
                 try:
-                    db = MongoDB()
-                    self.data = {'intents': list(db.query('lisa', 'chatbot-intents', {}))}
+                    self.data = self.temporal_lobe.retrieve_intents()
                 except:
                     log.exception('Failed to load intents from MONGO DB')
                     exit()
@@ -61,6 +66,7 @@ class Brain:
             exit()
 
     def load_model(self):
+        log.info('Loading model from pickle.')
         try:
             with open(JSON_FILE_PATH, 'r') as file:
                 self.chatbot_model = model_from_json(file.read())
@@ -102,7 +108,6 @@ class Brain:
             self.load()
 
         try:
-
             tag = None
             score = None
             response = None
@@ -118,16 +123,18 @@ class Brain:
             tag = self.labels[result_index]
 
             score = result[0][result_index]
-
+            
             if score > 0.7:
-                log.info(f'Prediction score for {txt_input} is {score}')
+                log.info(f'Prediction for "{txt_input}" returned label "{tag}" with score {score}')
                 for tg in self.data['intents']:
                     if tg['tag'] == tag:
                         response = random.choice(tg['responses'])
                 
                 return tag, score, response
             else:
+                log.info(f'Not able to predict a value to: "{txt_input}"')
                 return None
         except:
+            
             log.exception('Failed to predict value')
             return None
