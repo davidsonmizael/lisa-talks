@@ -10,7 +10,7 @@ LISA Talks is one part of the application backend for LISA, which evolves around
 - Trains the model based on a single Intent file
 - Test the model with a list of inputs
 - MongoDB integration to load Intents for model training
-- Simple API to consume the model predictions
+- Simple chatbot APIs to follow a conversation flow with lisa
 
 #### TODO
 
