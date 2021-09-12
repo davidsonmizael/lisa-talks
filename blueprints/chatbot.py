@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-blueprint = Blueprint('api', __name__, url_prefix='/lisatalk')
+blueprint = Blueprint('api', __name__, url_prefix='/lisa')
 broca = Broca()
 temporal_lobe = TemporalLobe()
 
@@ -19,8 +19,7 @@ def startConversation():
 
 @blueprint.route('/continue-conversation', methods=['POST'])
 def continueConversation():
-    user_input = request.form['chat_input']
     conversation_id = request.form['conversation_id']
-    response = broca.continue_conversation(conversation_id, user_input)
+    response = broca.continue_conversation(conversation_id, request)
     return response
 

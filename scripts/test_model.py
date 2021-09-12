@@ -130,11 +130,9 @@ def predict(chatbot_model, txt_input, data, words, labels):
             log.info(f'Prediction score for {txt_input} is {result[0][result_index]}')
             for tg in data['intents']:
                 if tg['tag'] == tag:
-                    responses = tg['responses']
-            
-            return tag, random.choice(responses)
+                    return tag
         else:
-            return None, None
+            return None
     except:
         log.exception('Failed to predict value')
 
@@ -153,11 +151,10 @@ def test():
         for txt_input in txt_input_list:
             word_count += 1
             log.info(f'Testing with word: "{txt_input}"')
-            tag, result = predict(chatbot_model, txt_input, data, words, labels)
-            if result is None:
+            tag = predict(chatbot_model, txt_input, data, words, labels)
+            if tag is None:
                 log.info(f'[x]Failed to find a match for: "{txt_input}"')
             else:
-                log.info(f'[!!!] Predicted response for "{txt_input}": "{result}"')
                 if label == tag:
                     log.info(f'[!!!] Predicted tag for "{txt_input}" matches expected result: {label}')
                     success_count += 1

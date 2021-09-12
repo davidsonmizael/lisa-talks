@@ -7,12 +7,6 @@
                 "Tem alguem ai?",
                 "Olá",
                 "Bom dia"
-            ],
-            "responses": [
-                "Olá!",
-                "Oi, bom te ver!",
-                "Olá, como posso te ajudar?",
-                "Oiii! Tudo bem?"
             ]
         },
         {
@@ -20,10 +14,6 @@
             "patterns": [
                 "Tudo bem?",
                 "Como vai?"
-            ],
-            "responses": [
-                "Estou bem! Como você está?",
-                "Estou bem, e voce?"
             ]
         },
         {
@@ -36,11 +26,6 @@
                 "Estou saindo",
                 "Tenha um bom dia",
                 "xau"
-            ],
-            "responses": [
-                "Te vejo mais tarde!",
-                "Até mais!",
-                "Tchau!"
             ]
         },
         {
@@ -51,11 +36,6 @@
                 "Qual a sua idade?",
                 "quantos anos voce tem",
                 "idade?"
-            ],
-            "responses": [
-                "Sou uma jovem senhora de poucos anos!",
-                "Não se deve perguntar a idade de uma senhora!",
-                "Apenas poucos aninhos!"
             ]
         },
         {
@@ -64,11 +44,6 @@
                 "qual o seu nome",
                 "como devo te chamar?",
                 "como você se chama?"
-            ],
-            "responses": [
-                "Pode me chamar de Lisa :)",
-                "Sou a Lisa!",
-                "Lisa!"
             ]
         },
         {
@@ -79,11 +54,6 @@
                 "preciso colocar algo pra fora",
                 "estou precisando conversar",
                 "gostaria de falar com alguem"
-            ],
-            "responses": [
-                "Pode se abrir comigo!",
-                "Fique a vontade para se abrir comigo!",
-                "Sou toda ouvidos :) "
             ]
         },
         {
@@ -95,9 +65,6 @@
                 "estou precisando de ajuda",
                 "alguem me ajude",
                 "estou me sentindo suicida"
-            ],
-            "responses": [
-                "Estou te encaminhando para um psicólogo."
             ]
         }
     ]

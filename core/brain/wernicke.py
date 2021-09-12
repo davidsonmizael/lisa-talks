@@ -126,15 +126,11 @@ class Wernicke:
             
             if score > 0.7:
                 log.info(f'Prediction for "{txt_input}" returned label "{tag}" with score {score}')
-                for tg in self.data['intents']:
-                    if tg['tag'] == tag:
-                        response = random.choice(tg['responses'])
-                
-                return tag, score, response
+                return tag, score
             else:
                 log.info(f'Not able to predict a value to: "{txt_input}"')
                 return None
         except:
-            
+
             log.exception('Failed to predict value')
             return None

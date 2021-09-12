@@ -26,8 +26,12 @@ class TemporalLobe:
         col.update_one({'_id':ObjectId(conversation_id)}, {"$set": conversation}, upsert=True)
 
     def save_prediction(self, prediction):
-        col = self.db.get_collection("chatbot-userinputs")
+        col = self.db.get_collection("chatbot-userinputs-predictions")
         col.insert(prediction)
+
+    def save_user_input(self, user_input):
+        col = self.db.get_collection("userdata-responses")
+        col.insert(user_input)
 
     def retrieve_conversation(self, conversation_id):
         col = self.db.get_collection("chatbot-conversations")
@@ -35,7 +39,15 @@ class TemporalLobe:
 
     def retrieve_failback(self, failback):
         col = self.db.get_collection("chatbot-messages")
-        return col.find_one({"type": "failback", "tag":failback})
+        return col.find_one({"type": "failback", "tag": failback})
+
+    def retrieve_reply(self, tag):
+        col = self.db.get_collection("chatbot-messages")
+        return col.find_one({"type": "reply", "tag": tag})
+
+    def retrieve_question(self, tag):
+        col = self.db.get_collection("chatbot-messages")
+        return col.find_one({"type": "question", "tag": tag})
 
     def retrieve_scope(self, scope):
         col = self.db.get_collection("chatbot-decisiontree")

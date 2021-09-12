@@ -25,8 +25,7 @@ class Broca:
 
         return self.temporal_lobe.save_conversation(conversation)
 
-
-    def continue_conversation(self, conversation_id, user_input):
+    def retrieve_conversation(self, conversation_id):
         conversation = self.temporal_lobe.retrieve_conversation(conversation_id)
         if conversation['conversation_flow'] == []:
             last_step = 0   
@@ -43,31 +42,98 @@ class Broca:
             if step['step'] == str( last_step + 1):
                 current_step = step
         
-        #TODO implement restart conversation?
-        if current_step is None or current_step == []:
-            return {"status": "failed", "message": "Até mais!"}
+        return current_decisiontree, conversation, last_step, current_step
 
-        conv_response = {}
-        result = self.wernicke.predict(user_input)
-        if result is not None:
-            tag, score, response = result
-            self.temporal_lobe.save_prediction({"tag": tag, "conversation_id": conversation_id, "input": user_input, "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "score": str(score), "response": response, "status": "success"})   
+    def continue_conversation(self, conversation_id, request):
+        current_decisiontree, conversation, last_step, current_step = self.retrieve_conversation(conversation_id)
+        step_actions = current_step['actions']
 
-            if current_step['label'] == tag:
-                conversation['conversation_flow'].append({"step": str(last_step + 1), "tag": tag, "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "input": user_input, "score": str(score), "response": response})
-                self.temporal_lobe.update_conversation(conversation_id, conversation)
-                return {"status": "success", "message": response}
-            else:
-                failback = random.choice(self.temporal_lobe.retrieve_failback(current_step['failback'])['messages'])
-                conversation['conversation_flow'].append({"step": str(last_step if last_step != 0 else 1), "tag": current_step['label'], "failback": "true", "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "input": user_input, "response": failback})
-                self.temporal_lobe.update_conversation(conversation_id, conversation)
-                return {"status": "failed", "message": failback}
+        failed_to_predict = True
+        predicted_intent = None
+        current_step_no = int(current_step['step'])
+        response = {}
 
+        if current_step['type'] == 'input':
+            if 'predict-intent' in step_actions:
+                user_input = request.form['user_input']
+                predicted_intent = self.wernicke.predict(user_input)
         else:
-            self.temporal_lobe.save_prediction({"input": user_input, "conversation_id": conversation_id, "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "status": "failed"})
+            if current_step['type'] == 'message':
+                reply_msg = random.choice(self.temporal_lobe.retrieve_reply(current_step['message'])['messages'])
 
-            failback = random.choice(self.temporal_lobe.retrieve_failback(current_step['failback'])['messages'])
-            conversation['conversation_flow'].append({"step": str(last_step if last_step != 0 else 1), "tag": current_step['label'], "failback": "true", "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "input": user_input, "response": failback})
-            
+            if current_step['type'] == 'question':
+                reply_msg = random.choice(self.temporal_lobe.retrieve_question(current_step['message'])['messages'])
+
+            conversation['conversation_flow'].append({"step": str(last_step + 1), "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "type": "bot_message", "response": reply_msg})
             self.temporal_lobe.update_conversation(conversation_id, conversation)
-            return {"status": "failed", "message": failback}
+            return {"status": "success", "lisa-response": [reply_msg]}
+
+        for action in step_actions:
+            if action == 'predict-intent':
+                if predicted_intent is not None:
+                    tag, score = predicted_intent
+
+                    if tag == step_actions[action] or tag in step_actions[action]:
+                        failed_to_predict = False
+                        self.temporal_lobe.save_prediction({"tag": tag, "conversation_id": conversation_id, "input": user_input, "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "score": str(score), "status": "success"})   
+                    else:
+                        failed_to_predict = True
+                        self.temporal_lobe.save_prediction({"input": user_input, "predicted": tag, "expected_value": step_actions[action], "conversation_id": conversation_id, "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "status": "failed"})
+                        break
+                else:
+                    failed_to_predict = True
+                    self.temporal_lobe.save_prediction({"input": user_input, "expected_value": step_actions[action], "conversation_id": conversation_id, "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "status": "failed"})
+                    break
+
+            if action == 'reply-with-message':
+                reply_msg = random.choice(self.temporal_lobe.retrieve_reply(step_actions[action])['messages'])
+                if 'reply-messages' not in response:
+                    response['reply-messages'] = []
+                response['reply-messages'].append(reply_msg)
+            elif action == 'reply-with-question':
+                if 'reply-question' not in response:
+                    response['reply-question'] = []
+                db_question = self.temporal_lobe.retrieve_question(step_actions[action])
+                response['reply-question']['question'] = db_question['question']
+                if 'options' in db_question:
+                    response['reply-question']['options'] = db_question['options']
+            elif action == 'reply-with-condition':
+                reply_msg = random.choice(self.temporal_lobe.retrieve_reply(step_actions['reply-with-condition'][tag])['messages'])
+                if 'reply-messages' not in response:
+                    response['reply-messages'] = []
+                response['reply-messages'].append(reply_msg)
+            elif action == 'save-reply':
+                previous_question = "Unavailable"
+                for step in current_decisiontree['flow']:
+                    if step['step'] == str(last_step) and step['type'] == 'question':
+                        previous_question = step['message']
+                self.temporal_lobe.save_user_input({"conversation_id": conversation_id, "user_id": conversation['user_id'], "step": str(current_step_no), "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "previous_question": previous_question ,"user_input": user_input})
+            elif action == 'jump-to-step':
+                last_step = current_step_no
+                current_step_no += 1
+                for step in current_decisiontree['flow']:
+                    if step['step'] == str(int(current_step['step']) + 1):
+                        if step['type'] == 'question':
+                            if 'reply-question' not in response:
+                                response['reply-question'] = {}
+                            db_question = self.temporal_lobe.retrieve_question(step['message'])
+                            response['reply-question']['question'] = db_question['question']
+                            if 'options' in db_question:
+                                response['reply-question']['options'] = db_question['options']
+
+                        if step['type'] == 'message':
+                            if 'reply-message' not in response:
+                                response['reply-message'] = []
+                                response['reply-messages'].append(reply_msg = random.choice(self.temporal_lobe.retrieve_reply(step['message'])['messages']))
+                
+        if not failed_to_predict or response:
+            conversation['conversation_flow'].append({"step": str(current_step_no), "tag": tag, "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "type": "user_input", "input": user_input, "score": str(score), "response": response})
+            self.temporal_lobe.update_conversation(conversation_id, conversation)
+            return {"status": "success", "lisa-response": response}
+        else:
+            if 'reply-messages' not in response:
+                response['reply-messages'] = []
+                response['reply-messages'].append(random.choice(self.temporal_lobe.retrieve_failback(current_step['failback'])['messages']))
+            conversation['conversation_flow'].append({"step": str(last_step if last_step != 0 else 1), "tag": current_step['label'], "failback": "true", "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), "input": user_input, "response": response})
+            self.temporal_lobe.update_conversation(conversation_id, conversation)
+            return {"status": "failed", "lisa-response": response}
