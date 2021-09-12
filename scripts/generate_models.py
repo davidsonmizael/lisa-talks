@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #mandatory imports
 import logging as log
 import os
@@ -8,7 +7,7 @@ import pickle
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense
 
-log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log"), log.StreamHandler()])
+log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log", mode='a'), log.StreamHandler()])
 
 #global variables
 PICKLE_FILE_PATH = "assets/chatbot.pickle"

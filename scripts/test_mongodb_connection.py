@@ -1,10 +1,9 @@
-#!/usr/bin/env python
 import os
 import logging as log
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
-log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log"), log.StreamHandler()])
+log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log", mode='a'), log.StreamHandler()])
 
 load_dotenv()
 

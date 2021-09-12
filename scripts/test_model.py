@@ -14,7 +14,7 @@ from tensorflow.python.keras.models import model_from_json
 from core.connection.mongodb import MongoDB
 from dotenv import load_dotenv
 
-log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log"), log.StreamHandler()])
+log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log", mode='a'), log.StreamHandler()])
 
 load_dotenv()
 

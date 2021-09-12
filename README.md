@@ -29,6 +29,7 @@ Use `setup.py` to install the dependencies and generate the model to run locally
 
 ```sh
 python setup.py develop
+python generate_assets.py
 ```
 
 Run the Flask server using `run.py`.

@@ -15,7 +15,7 @@ import json
 from datetime import datetime
 from core.brain.temporal_lobe import TemporalLobe
 
-log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log"), log.StreamHandler()])
+log.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=log.INFO, datefmt='%d-%b-%y %H:%M:%S', handlers=[log.FileHandler(f"logs/{os.path.basename(__file__)[:-3]}.log", mode='a'), log.StreamHandler()])
 load_dotenv()
 
 LANGUAGE = os.getenv("LANGUAGE")
